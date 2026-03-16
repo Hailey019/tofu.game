@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>切霉豆腐 Slice Mold Tofu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f0e8d0;
+      --border: #2a1a08;
+      --accent: #c0392b;
+      --bamboo: #d8c898;
+      --bamboo-dark: #8a7040;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--border);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .game-root {
+      width: 100%;
+      max-width: 390px;
+      padding: 12px 10px 20px;
+    }
+
+    .pixel-border {
+      border: 3px solid var(--border);
+      box-shadow: 0 0 0 2px #f8f1da;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .title {
+      font-family: "Press Start 2P", system-ui, sans-serif;
+      font-size: 18px;
+      text-align: center;
+      color: var(--accent);
+      margin: 6px 0 10px;
+    }
+
+    /* INTRO SCREEN */
+
+    .intro-scene {
+      position: relative;
+      overflow: hidden;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .intro-bg {
+      background: linear-gradient(#7ec9ff 0 55%, #74bdff 55% 65%, #5cb345 65% 100%);
+      position: relative;
+      padding: 10px;
+    }
+
+    .intro-bg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 3px solid var(--border);
+      pointer-events: none;
+    }
+
+    .sun {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #ffe26a;
+      border: 3px solid #e0a800;
+      top: 10px;
+      right: 26px;
+      image-rendering: pixelated;
+    }
+
+    .cloud {
+      position: absolute;
+      height: 16px;
+      background: #ffffff;
+      border: 3px solid var(--border);
+      border-radius: 10px;
+      image-rendering: pixelated;
+    }
+
+    .cloud.small {
+      width: 40px;
+      top: 20px;
+      left: 20px;
+    }
+
+    .cloud.medium {
+      width: 60px;
+      top: 40px;
+      left: 80px;
+    }
+
+    .cloud.large {
+      width: 80px;
+      top: 18px;
+      right: 80px;
+    }
+
+    .stall {
+      position: relative;
+      margin: 70px auto 6px;
+      width: 88%;
+      max-width: 340px;
+      image-rendering: pixelated;
+    }
+
+    .stall-top {
+      height: 18px;
+      background: #9c6b33;
+      border: 3px solid var(--border);
+      border-bottom: none;
+    }
+
+    .stall-legs {
+      position: relative;
+      height: 40px;
+      background: #b37a3c;
+      border: 3px solid var(--border);
+      border-top: none;
+    }
+
+    .stall-leg {
+      position: absolute;
+      width: 10px;
+      bottom: -12px;
+      background: #7a4c1f;
+      border: 3px solid var(--border);
+    }
+
+    .stall-leg.left {
+      left: 10%;
+    }
+
+    .stall-leg.right {
+      right: 10%;
+    }
+
+    .stall-banner {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      border: 3px solid var(--border);
+      padding: 4px 6px;
+      font-size: 10px;
+      color: #ffeeda;
+      white-space: nowrap;
+      font-family: "Press Start 2P", system-ui, sans-serif;
+    }
+
+    .lady-canvas-wrap {
+      position: absolute;
+      bottom: 2px;
+      left: 10px;
+      width: 90px;
+      height: 120px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      pointer-events: none;
+    }
+
+    #ladyCanvas {
+      image-rendering: pixelated;
+      border: 3px solid var(--border);
+      background: transparent;
+    }
+
+    .lady-shake {
+      animation: shake 0.32s steps(2, end) 1;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-3px); }
+      100% { transform: translateX(0); }
+    }
+
+    .swipe-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.15);
+      pointer-events: none;
+      font-family: "Press Start 2P", system-ui, sans-serif;
+      color: #ffe;
+      font-size: 11px;
+    }
+
+    .swipe-overlay.show {
+      display: flex;
+    }
+
+    .speech-box {
+      margin-top: 8px;
+      background: #fff7e6;
+      border-radius: 6px;
+      padding: 8px 8px 10px;
+      border: 3px solid var(--border);
+      position: relative;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .speech-box::before {
+      content: "";
+      position: absolute;
+      left: 20px;
+      top: -10px;
+      width: 12px;
+      height: 12px;
+      background: #fff7e6;
+      border-left: 3px solid var(--border);
+      border-top: 3px solid var(--border);
+      transform: rotate(45deg);
+    }
+
+    .speech-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 3px solid var(--border);
+      background: #ffeede;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: "Press Start 2P", system-ui, sans-serif;
+      color: var(--border);
+      border-radius: 4px;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #ffeede;
+    }
+
+    .btn-danger {
+      background: #8b1b13;
+      color: #ffeede;
+    }
+
+    .btn-full {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    /* MAIN GAME */
+
+    .score-bar {
+      font-family: "Press Start 2P", system-ui, sans-serif;
+      font-size: 11px;
+      border: 3px solid var(--border);
+      padding: 6px 6px 7px;
+      background: #fff5de;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .score-section {
+      flex: 1;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .score-section:first-child {
+      text-align: left;
+    }
+
+    .score-section:last-child {
+      text-align: right;
+    }
+
+    .hint-bar {
+      font-size: 12px;
+      border: 3px solid var(--border);
+      padding: 6px 8px;
+      background: #fff9e9;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .tofu-board-wrap {
+      margin: 0 auto 10px;
+      padding: 12px 4px 6px;
+      transform: perspective(700px) rotateX(14deg);
+      transform-origin: center top;
+    }
+
+    .tofu-board-inner {
+      position: relative;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 340px;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          var(--bamboo),
+          var(--bamboo) 8px,
+          #e4d4a0 8px,
+          #e4d4a0 16px
+        );
+      border: 4px solid var(--border);
+      box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.15);
+      padding: 10px 12px 14px;
+      border-radius: 8px;
+    }
+
+    #tofuCanvas {
+      width: 100%;
+      display: block;
+      image-rendering: pixelated;
+      touch-action: none;
+      background: transparent;
+    }
+
+    .buttons-row {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      margin-top: 6px;
+    }
+
+    .buttons-row .btn {
+      flex: 1;
+      text-align: center;
+      justify-content: center;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .popup-score {
+      position: absolute;
+      pointer-events: none;
+      font-family: "Press Start 2P", system-ui, sans-serif;
+      font-size: 11px;
+      color: #ff4646;
+      text-shadow: none;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+    }
+
+    .popup-score.show {
+      opacity: 1;
+    }
+
+    /* MIXING SCREEN */
+    .mix-screen {
+      margin-top: 10px;
+    }
+
+    .mix-layout {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      justify-content: space-between;
+      border: 3px solid var(--border);
+      padding: 10px 8px 12px;
+      background: #fff7e6;
+      border-radius: 6px;
+    }
+
+    .bottle {
+      flex: 1;
+      max-width: 140px;
+      height: 170px;
+      border: 3px solid var(--border);
+      border-radius: 10px 10px 18px 18px;
+      background: repeating-linear-gradient(
+        0deg,
+        #f9f6ea,
+        #f9f6ea 6px,
+        #f0ebdd 6px,
+        #f0ebdd 12px
+      );
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bottle-neck {
+      position: absolute;
+      top: -18px;
+      left: 22%;
+      width: 56%;
+      height: 16px;
+      background: #f9f6ea;
+      border: 3px solid var(--border);
+      border-radius: 8px 8px 2px 2px;
+    }
+
+    .bottle-tofu {
+      position: absolute;
+      inset: 24px 8px 8px 8px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: 1fr;
+      gap: 2px;
+    }
+
+    .bottle-tofu div {
+      background: #f7f1d8;
+      border: 2px solid #d1c39a;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.6);
+    }
+
+    .condiments {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: "Press Start 2P", system-ui, sans-serif;
+      font-size: 10px;
+    }
+
+    .condiment-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border: 3px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 6px;
+      background: #fff5e6;
+      cursor: pointer;
+    }
+
+    .condiment-btn span {
+      flex: 1;
+      text-align: left;
+    }
+
+    .condiment-btn.added {
+      background: #ffe0c2;
+      box-shadow: inset 0 0 0 2px rgba(192,57,43,0.35);
+    }
+
+    .condiment-icon {
+      width: 18px;
+      height: 18px;
+      border: 3px solid var(--border);
+      border-radius: 4px;
+      image-rendering: pixelated;
+    }
+
+    .icon-chili {
+      background: linear-gradient(135deg, #c0392b 0, #ff6b3a 70%);
+    }
+
+    .icon-salt {
+      background: repeating-linear-gradient(
+        0deg,
+        #ffffff,
+        #ffffff 4px,
+        #e0e0e0 4px,
+        #e0e0e0 8px
+      );
+    }
+
+    .icon-liquor {
+      background: linear-gradient(#fefefe 0, #f2f2ff 60%, #e0e0ff 100%);
+    }
+
+    .mix-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .mix-text {
+      margin-top: 8px;
+      font-size: 12px;
+      text-align: center;
+      min-height: 32px;
+    }
+
+    .bottle-shake {
+      animation: bottle-shake 0.7s linear infinite;
+    }
+
+    @keyframes bottle-shake {
+      0% { transform: rotate(0deg); }
+      20% { transform: rotate(4deg); }
+      40% { transform: rotate(-4deg); }
+      60% { transform: rotate(3deg); }
+      80% { transform: rotate(-3deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    .btn[disabled] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    @media (max-width: 360px) {
+      .title {
+        font-size: 16px;
+      }
+      .score-bar {
+        font-size: 10px;
+      }
+      .btn {
+        font-size: 10px;
+        padding: 5px 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-root">
+    <!-- Shared Title -->
+    <div class="title">✦切霉豆腐✦</div>
+
+    <!-- INTRO SCREEN -->
+    <div id="screenIntro" class="screen active">
+      <div class="intro-scene pixel-border">
+        <div class="intro-bg">
+          <div class="sun"></div>
+          <div class="cloud small"></div>
+          <div class="cloud medium"></div>
+          <div class="cloud large"></div>
+
+          <div class="stall">
+            <div class="stall-banner">正宗霉豆腐 新鲜现做</div>
+            <div class="stall-top"></div>
+            <div class="stall-legs">
+              <div class="stall-leg left"></div>
+              <div class="stall-leg right"></div>
+            </div>
+            <div class="lady-canvas-wrap">
+              <canvas id="ladyCanvas" width="64" height="96"></canvas>
+            </div>
+          </div>
+
+          <div id="swipeOverlay" class="swipe-overlay">
+            <span>一巴掌呼过来！</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="speech-box">
+        <div id="speechText"></div>
+        <div id="speechButtons" class="speech-buttons">
+          <button id="btnTouch" class="btn">摸摸看</button>
+          <button id="btnBuy" class="btn btn-primary">当然买！</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN GAME SCREEN -->
+    <div id="screenGame" class="screen">
+      <div class="score-bar">
+        <div id="cutInfo" class="score-section">切了: 0/12</div>
+        <div id="scoreInfo" class="score-section">★ 0</div>
+        <div id="lifeInfo" class="score-section">♥♥♥</div>
+      </div>
+
+      <div class="title">✦切霉豆腐✦</div>
+
+      <div id="hintBar" class="hint-bar">
+        用手划过缝隙来切！
+      </div>
+
+      <div class="tofu-board-wrap">
+        <div class="tofu-board-inner pixel-border">
+          <canvas id="tofuCanvas" width="320" height="220"></canvas>
+          <div id="popupScore" class="popup-score">+20</div>
+        </div>
+      </div>
+
+      <div class="buttons-row">
+        <button id="btnBack" class="btn">← 回去</button>
+        <button id="btnReset" class="btn">↺ 重切</button>
+      </div>
+    </div>
+
+    <!-- MIXING SCREEN -->
+    <div id="screenMix" class="screen">
+      <div class="score-bar">
+        <div class="score-section">拌霉豆腐</div>
+        <div class="score-section">★ 完成</div>
+        <div class="score-section"></div>
+      </div>
+
+      <div class="title">✦切霉豆腐✦</div>
+
+      <div class="mix-screen">
+        <div class="mix-layout">
+          <div class="bottle" id="mixBottle">
+            <div class="bottle-neck"></div>
+            <div class="bottle-tofu" id="mixBottleTofu"></div>
+          </div>
+          <div class="condiments">
+            <button class="condiment-btn" data-condiment="chili">
+              <div class="condiment-icon icon-chili"></div>
+              <span>辣椒面</span>
+            </button>
+            <button class="condiment-btn" data-condiment="salt">
+              <div class="condiment-icon icon-salt"></div>
+              <span>食盐</span>
+            </button>
+            <button class="condiment-btn" data-condiment="liquor">
+              <div class="condiment-icon icon-liquor"></div>
+              <span>高度白酒</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="mix-actions">
+          <button id="btnShake" class="btn btn-primary" disabled>确认摇瓶</button>
+        </div>
+        <div id="mixText" class="mix-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- INTRO LADY DRAWING (PIXEL BY PIXEL) ----------
+    (function() {
+      const canvas = document.getElementById("ladyCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+
+      function px(x, y, w, h, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, h);
+      }
+
+      function drawLady() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // stall counter background
+        px(0, 72, 64, 24, "#b37a3c");
+
+        // shoes
+        px(18, 76, 8, 4, "#2a1a08");
+        px(38, 76, 8, 4, "#2a1a08");
+
+        // dress
+        px(18, 44, 28, 30, "#c0392b");
+        px(18, 44, 28, 2, "#8b1b13");
+        px(18, 72, 28, 2, "#8b1b13");
+
+        // arms
+        px(14, 46, 8, 14, "#f5d3b5");
+        px(42, 46, 8, 14, "#f5d3b5");
+
+        // hands
+        px(12, 57, 7, 6, "#f0c5a0");
+        px(45, 57, 7, 6, "#f0c5a0");
+
+        // neck
+        px(26, 38, 12, 6, "#f5d3b5");
+
+        // face
+        px(22, 22, 20, 16, "#f7d8b9");
+        // hair
+        px(18, 18, 28, 10, "#3b1d0e");
+        px(18, 22, 4, 16, "#3b1d0e");
+        px(42, 22, 4, 16, "#3b1d0e");
+
+        // eyebrows
+        px(24, 26, 6, 2, "#2a1a08");
+        px(34, 26, 6, 2, "#2a1a08");
+        // eyes
+        px(26, 30, 3, 3, "#000");
+        px(35, 30, 3, 3, "#000");
+        // blush
+        px(22, 34, 4, 2, "#ff9a9a");
+        px(36, 34, 4, 2, "#ff9a9a");
+        // mouth
+        px(28, 36, 8, 2, "#8b1b13");
+
+        // hairpin
+        px(34, 20, 6, 2, "#ffc95a");
+      }
+
+      drawLady();
+    })();
+
+    // ---------- INTRO TYPEWRITER & BUTTON LOGIC ----------
+    (function() {
+      const speechText = document.getElementById("speechText");
+      const speechButtons = document.getElementById("speechButtons");
+      const btnTouch = document.getElementById("btnTouch");
+      const btnBuy = document.getElementById("btnBuy");
+      const swipeOverlay = document.getElementById("swipeOverlay");
+      const ladyCanvas = document.getElementById("ladyCanvas");
+
+      let typingTimer = null;
+      let currentLine = "";
+      let charIndex = 0;
+
+      // 对话脚本
+      const sellerLine = "要买霉豆腐吗美女？";
+      const sellerScold = "哎呀不能摸不能摸！你摸了我还怎么卖呀！";
+
+      const angryLines = [
+        "喂！别乱摸！这是宝贝霉豆腐！",
+        "再摸？信不信我用豆腐拍你！",
+        "好了好了别摸了，买就对了！"
+      ];
+
+      let touchCount = 0;
+
+      function typeLine(text, cb) {
+        if (typingTimer) clearInterval(typingTimer);
+        currentLine = text;
+        charIndex = 0;
+        speechText.textContent = "";
+        typingTimer = setInterval(() => {
+          charIndex++;
+          speechText.textContent = currentLine.slice(0, charIndex);
+          if (charIndex >= currentLine.length) {
+            clearInterval(typingTimer);
+            typingTimer = null;
+            if (cb) cb();
+          }
+        }, 55);
+      }
+
+      function showSwipeOverlayBrief() {
+        swipeOverlay.classList.add("show");
+        setTimeout(() => {
+          swipeOverlay.classList.remove("show");
+        }, 420);
+      }
+
+      function shakeLady() {
+        ladyCanvas.classList.remove("lady-shake");
+        void ladyCanvas.offsetWidth;
+        ladyCanvas.classList.add("lady-shake");
+      }
+
+      btnTouch.addEventListener("click", () => {
+        touchCount++;
+        shakeLady();
+        showSwipeOverlayBrief();
+
+        if (touchCount === 1) {
+          // 第一次：老板直接制止
+          typeLine(sellerScold);
+          return;
+        }
+
+        const idx = Math.min(touchCount - 2, angryLines.length - 1);
+        typeLine(angryLines[idx]);
+
+        if (touchCount >= 2 + angryLines.length - 1) {
+          speechButtons.innerHTML = "";
+          const finalBtn = document.createElement("button");
+          finalBtn.className = "btn btn-danger btn-full";
+          finalBtn.textContent = "好了买买买！";
+          // 最后一拍：直接进游戏，不再重复对白
+          finalBtn.addEventListener("click", () => {
+            document.getElementById("screenIntro").classList.remove("active");
+            document.getElementById("screenGame").classList.add("active");
+            initTofuGame();
+          });
+          speechButtons.appendChild(finalBtn);
+        }
+      });
+
+      function goToGameFromIntro() {
+        typeLine("好嘞！随便切！想怎么切就怎么切！", () => {
+          setTimeout(() => {
+            document.getElementById("screenIntro").classList.remove("active");
+            document.getElementById("screenGame").classList.add("active");
+            initTofuGame();
+          }, 450);
+        });
+      }
+
+      btnBuy.addEventListener("click", goToGameFromIntro);
+
+      // 开场台词：只有老板一句话
+      typeLine(sellerLine);
+    })();
+
+    // ---------- MAIN GAME: TOFU BOARD & CUTTING ----------
+    let initTofuGame;
+
+    (function() {
+      const canvas = document.getElementById("tofuCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+
+      const popupScoreEl = document.getElementById("popupScore");
+      const cutInfoEl = document.getElementById("cutInfo");
+      const scoreInfoEl = document.getElementById("scoreInfo");
+      const lifeInfoEl = document.getElementById("lifeInfo");
+      const hintBar = document.getElementById("hintBar");
+
+      const btnBack = document.getElementById("btnBack");
+      const btnReset = document.getElementById("btnReset");
+      const screenIntro = document.getElementById("screenIntro");
+      const screenGame = document.getElementById("screenGame");
+      const screenMix = document.getElementById("screenMix");
+      const mixBottle = document.getElementById("mixBottle");
+      const mixBottleTofu = document.getElementById("mixBottleTofu");
+      const btnShake = document.getElementById("btnShake");
+      const mixText = document.getElementById("mixText");
+      const condimentButtons = document.querySelectorAll(".condiment-btn");
+
+      // 关卡 & 网格设置
+      let GRID_COLS = 4;
+      let GRID_ROWS = 3;
+      let TOTAL_BLOCKS = GRID_COLS * GRID_ROWS;
+      let currentLevel = 1;
+      const MAX_LEVEL = 20;
+
+      let tofuRect = { x: 30, y: 40, w: 260, h: 140 };
+      let blockW = tofuRect.w / GRID_COLS;
+      let blockH = tofuRect.h / GRID_ROWS;
+
+      const grooves = [];
+      let score = 0;
+      let cutGrooveCount = 0;
+      let cutBlockCount = 0;
+
+      // 本关计时 & 操作次数，用于评分
+      let levelStartTime = 0;
+      let attempts = 0;
+
+      let lastTime = 0;
+      const addedCondiments = {
+        chili: false,
+        salt: false,
+        liquor: false
+      };
+
+      function setupLevel() {
+        // 每一关豆腐多一圈：行列都随关卡线性增加
+        const extra = currentLevel - 1;
+        GRID_COLS = 4 + extra;
+        GRID_ROWS = 3 + extra;
+        TOTAL_BLOCKS = GRID_COLS * GRID_ROWS;
+
+        // 固定托盘尺寸，块变小以容纳更多豆腐
+        tofuRect = { x: 30, y: 40, w: 260, h: 140 };
+        blockW = tofuRect.w / GRID_COLS;
+        blockH = tofuRect.h / GRID_ROWS;
+      }
+
+      function createGrooves() {
+        grooves.length = 0;
+        // 水平缝：行与行之间
+        for (let r = 1; r < GRID_ROWS; r++) {
+          grooves.push({
+            orientation: "h",
+            pos: tofuRect.y + blockH * r,
+            cut: false,
+            cutTime: 0
+          });
+        }
+        // 垂直缝：列与列之间
+        for (let c = 1; c < GRID_COLS; c++) {
+          grooves.push({
+            orientation: "v",
+            pos: tofuRect.x + blockW * c,
+            cut: false,
+            cutTime: 0
+          });
+        }
+      }
+
+      const moldCanvases = [];
+
+      // 更 fluffy、带一点 3D 体积感的霉毛纹理
+      function createMoldTextures() {
+        moldCanvases.length = 0;
+        const bw = Math.floor(blockW);
+        const bh = Math.floor(blockH);
+
+        for (let i = 0; i < TOTAL_BLOCKS; i++) {
+          const off = document.createElement("canvas");
+          off.width = bw;
+          off.height = bh;
+          const octx = off.getContext("2d");
+          octx.imageSmoothingEnabled = false;
+
+          // 基底：略暖、非常浅的豆腐色
+          octx.fillStyle = "#f9f6ea";
+          octx.fillRect(0, 0, bw, bh);
+
+          // 顶部整体高光：上半部分更亮，模拟霉层厚度
+          const highlightGrad = octx.createLinearGradient(0, 0, 0, bh);
+          highlightGrad.addColorStop(0, "rgba(255,255,255,0.9)");
+          highlightGrad.addColorStop(0.5, "rgba(255,255,255,0.6)");
+          highlightGrad.addColorStop(1, "rgba(255,255,255,0.2)");
+          octx.fillStyle = highlightGrad;
+          octx.fillRect(0, 0, bw, bh);
+
+          // fluffy 噪点云：偏亮、密度高一点
+          for (let j = 0; j < bw * bh * 1.1; j++) {
+            const x = Math.floor(Math.random() * bw);
+            const y = Math.floor(Math.random() * bh);
+            const v = 238 + Math.floor(Math.random() * 15);
+            const alpha = 0.5 + Math.random() * 0.4;
+            octx.fillStyle = `rgba(${v},${v},${v},${alpha})`;
+            octx.fillRect(x, y, 1, 1);
+          }
+
+          // 大片“毛绒云团”（更 3D 的感觉）
+          for (let k = 0; k < 10; k++) {
+            const cx = Math.floor(Math.random() * bw);
+            const cy = Math.floor(Math.random() * bh * 0.7);
+            const baseR = 4 + Math.floor(Math.random() * 4);
+
+            for (let r = baseR; r >= 1; r--) {
+              const layerAlpha = 0.15 + (baseR - r) * 0.08;
+              for (let y = -r; y <= r; y++) {
+                for (let x = -r; x <= r; x++) {
+                  if (x * x + y * y <= r * r) {
+                    const px = cx + x;
+                    const py = cy + y;
+                    if (px >= 0 && px < bw && py >= 0 && py < bh) {
+                      const v = 245 + Math.floor(Math.random() * 10);
+                      octx.fillStyle = `rgba(${v},${v},${v},${layerAlpha})`;
+                      octx.fillRect(px, py, 1, 1);
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          // 柔一点的竖向毛发（更像轻轻竖起来的霉）
+          for (let s = 0; s < 22; s++) {
+            const x = Math.floor(Math.random() * bw);
+            const h = 6 + Math.floor(Math.random() * 8);
+            const yStart = Math.floor(Math.random() * bh * 0.45);
+            let shade = 240 + Math.floor(Math.random() * 10);
+            for (let yy = 0; yy < h; yy++) {
+              const y = yStart + yy;
+              if (y >= bh) break;
+              const alpha = 0.25 + Math.random() * 0.35;
+              octx.fillStyle = `rgba(${shade},${shade},${shade},${alpha})`;
+              octx.fillRect(x, y, 1, 1);
+              shade -= 1;
+            }
+          }
+
+          // 底部：从 fluffy 过渡到豆腐本体的暖色阴影
+          const gradHeight = Math.floor(bh * 0.4);
+          for (let gy = 0; gy < gradHeight; gy++) {
+            const y = bh - gradHeight + gy;
+            const t = gy / gradHeight;
+            const alpha = 0.08 + t * 0.35;
+            octx.fillStyle = `rgba(221,196,146,${alpha})`;
+            octx.fillRect(0, y, bw, 1);
+          }
+
+          // 顶部边缘一点点光晕，让块更立体
+          for (let rx = 0; rx < bw; rx++) {
+            const edgeAlpha = 0.18;
+            octx.fillStyle = `rgba(255,255,255,${edgeAlpha})`;
+            octx.fillRect(rx, 0, 1, 1);
+          }
+
+          moldCanvases.push(off);
+        }
+      }
+
+      function resetGameState() {
+        score = 0;
+        cutGrooveCount = 0;
+        cutBlockCount = 0;
+        attempts = 0;
+        setupLevel();
+        createGrooves();
+        createMoldTextures();
+        updateUI();
+        hintBar.textContent = `第 ${currentLevel} 关：用手划过缝隙来切！`;
+        levelStartTime = performance.now();
+      }
+
+      function updateUI() {
+        cutInfoEl.textContent = `切了: ${cutBlockCount}/${TOTAL_BLOCKS}`;
+        scoreInfoEl.textContent = `★ 第${currentLevel}关`;
+        lifeInfoEl.textContent = "♥♥♥";
+      }
+
+      function drawScene(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "rgba(0,0,0,0.12)";
+        ctx.beginPath();
+        ctx.ellipse(canvas.width / 2, tofuRect.y + tofuRect.h + 18, tofuRect.w * 0.7, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const topColor = "#f7f1d8";
+        const sideColor = "#d8c898";
+        const edgeColor = "#cbb78a";
+        const depth = 10;
+
+        ctx.fillStyle = topColor;
+        ctx.fillRect(tofuRect.x, tofuRect.y, tofuRect.w, tofuRect.h);
+
+        ctx.fillStyle = sideColor;
+        ctx.beginPath();
+        ctx.moveTo(tofuRect.x + tofuRect.w, tofuRect.y);
+        ctx.lineTo(tofuRect.x + tofuRect.w + 10, tofuRect.y + 5);
+        ctx.lineTo(tofuRect.x + tofuRect.w + 10, tofuRect.y + tofuRect.h + 5);
+        ctx.lineTo(tofuRect.x + tofuRect.w, tofuRect.y + tofuRect.h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = edgeColor;
+        ctx.stroke();
+
+        ctx.fillStyle = sideColor;
+        ctx.beginPath();
+        ctx.moveTo(tofuRect.x, tofuRect.y + tofuRect.h);
+        ctx.lineTo(tofuRect.x + 10, tofuRect.y + tofuRect.h + 5);
+        ctx.lineTo(tofuRect.x + tofuRect.w + 10, tofuRect.y + tofuRect.h + 5);
+        ctx.lineTo(tofuRect.x + tofuRect.w, tofuRect.y + tofuRect.h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = edgeColor;
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(210,190,150,0.7)";
+        for (let i = 1; i < depth; i += 3) {
+          ctx.beginPath();
+          ctx.moveTo(tofuRect.x + 10, tofuRect.y + tofuRect.h + 5 - i);
+          ctx.lineTo(tofuRect.x + tofuRect.w + 10, tofuRect.y + tofuRect.h + 5 - i);
+          ctx.stroke();
+        }
+
+        for (let row = 0; row < GRID_ROWS; row++) {
+          for (let col = 0; col < GRID_COLS; col++) {
+            let dx = 0;
+            let dy = 0;
+            const offsetAmount = 3;
+
+            for (const g of grooves) {
+              if (!g.cut) continue;
+              if (g.orientation === "v") {
+                const cutX = g.pos;
+                const centerX = tofuRect.x + col * blockW + blockW / 2;
+                if (centerX < cutX) {
+                  dx -= offsetAmount;
+                } else {
+                  dx += offsetAmount;
+                }
+              } else {
+                const cutY = g.pos;
+                const centerY = tofuRect.y + row * blockH + blockH / 2;
+                if (centerY < cutY) {
+                  dy -= offsetAmount;
+                } else {
+                  dy += offsetAmount;
+                }
+              }
+            }
+
+            const bx = tofuRect.x + col * blockW + dx;
+            const by = tofuRect.y + row * blockH + dy;
+            const tex = moldCanvases[row * GRID_COLS + col];
+            ctx.drawImage(tex, bx, by, blockW, blockH);
+          }
+        }
+
+        ctx.lineWidth = 2;
+        for (const g of grooves) {
+          const baseColor = "#8a7040";
+          const gapColor = "#4a2f10";
+
+          const elapsed = g.cut ? (timestamp - g.cutTime) / 1000 : 0;
+          const flashAlpha = g.cut && elapsed < 0.4 ? (1 - elapsed / 0.4) : 0;
+
+          if (g.orientation === "h") {
+            const y = g.pos;
+            if (!g.cut) {
+              ctx.strokeStyle = baseColor;
+              ctx.beginPath();
+              ctx.moveTo(tofuRect.x, y);
+              ctx.lineTo(tofuRect.x + tofuRect.w, y);
+              ctx.stroke();
+            } else {
+              ctx.strokeStyle = gapColor;
+              ctx.lineWidth = 4;
+              ctx.beginPath();
+              ctx.moveTo(tofuRect.x - 2, y);
+              ctx.lineTo(tofuRect.x + tofuRect.w + 2, y);
+              ctx.stroke();
+              ctx.lineWidth = 2;
+
+              ctx.fillStyle = "#ede0b4";
+              ctx.fillRect(tofuRect.x - 2, y - 3, tofuRect.w + 4, 3);
+              ctx.fillStyle = "rgba(210,185,140,0.7)";
+              ctx.fillRect(tofuRect.x - 2, y - 2, tofuRect.w + 4, 1);
+
+              ctx.fillStyle = "#ede0b4";
+              ctx.fillRect(tofuRect.x - 2, y, tofuRect.w + 4, 3);
+              ctx.fillStyle = "rgba(210,185,140,0.7)";
+              ctx.fillRect(tofuRect.x - 2, y + 1, tofuRect.w + 4, 1);
+            }
+
+            if (flashAlpha > 0) {
+              ctx.strokeStyle = `rgba(255,255,255,${flashAlpha})`;
+              ctx.lineWidth = 4;
+              ctx.beginPath();
+              ctx.moveTo(tofuRect.x - 4, y);
+              ctx.lineTo(tofuRect.x + tofuRect.w + 4, y);
+              ctx.stroke();
+              ctx.lineWidth = 2;
+            }
+          } else {
+            const x = g.pos;
+            if (!g.cut) {
+              ctx.strokeStyle = baseColor;
+              ctx.beginPath();
+              ctx.moveTo(x, tofuRect.y);
+              ctx.lineTo(x, tofuRect.y + tofuRect.h);
+              ctx.stroke();
+            } else {
+              ctx.strokeStyle = gapColor;
+              ctx.lineWidth = 4;
+              ctx.beginPath();
+              ctx.moveTo(x, tofuRect.y - 2);
+              ctx.lineTo(x, tofuRect.y + tofuRect.h + 2);
+              ctx.stroke();
+              ctx.lineWidth = 2;
+
+              ctx.fillStyle = "#ede0b4";
+              ctx.fillRect(x - 3, tofuRect.y - 2, 3, tofuRect.h + 4);
+              ctx.fillStyle = "rgba(210,185,140,0.7)";
+              ctx.fillRect(x - 2, tofuRect.y - 2, 1, tofuRect.h + 4);
+
+              ctx.fillStyle = "#ede0b4";
+              ctx.fillRect(x, tofuRect.y - 2, 3, tofuRect.h + 4);
+              ctx.fillStyle = "rgba(210,185,140,0.7)";
+              ctx.fillRect(x + 1, tofuRect.y - 2, 1, tofuRect.h + 4);
+            }
+
+            if (flashAlpha > 0) {
+              ctx.strokeStyle = `rgba(255,255,255,${flashAlpha})`;
+              ctx.lineWidth = 4;
+              ctx.beginPath();
+              ctx.moveTo(x, tofuRect.y - 4);
+              ctx.lineTo(x, tofuRect.y + tofuRect.h + 4);
+              ctx.stroke();
+              ctx.lineWidth = 2;
+            }
+          }
+        }
+
+        requestAnimationFrame(drawScene);
+      }
+
+      let isDragging = false;
+      let lastPos = null;
+      const THRESHOLD = 12;
+
+      function getPointerPos(evt) {
+        const rect = canvas.getBoundingClientRect();
+        let clientX, clientY;
+        if (evt.touches && evt.touches.length > 0) {
+          clientX = evt.touches[0].clientX;
+          clientY = evt.touches[0].clientY;
+        } else {
+          clientX = evt.clientX;
+          clientY = evt.clientY;
+        }
+        return {
+          x: ((clientX - rect.left) / rect.width) * canvas.width,
+          y: ((clientY - rect.top) / rect.height) * canvas.height
+        };
+      }
+
+      function distancePointToLine(px, py, orientation, pos, min, max) {
+        if (orientation === "v") {
+          if (py < min || py > max) return Infinity;
+          return Math.abs(px - pos);
+        } else {
+          if (px < min || px > max) return Infinity;
+          return Math.abs(py - pos);
+        }
+      }
+
+      function handleMove(pos) {
+        if (!lastPos) {
+          lastPos = pos;
+          return;
+        }
+
+        const dx = pos.x - lastPos.x;
+        const dy = pos.y - lastPos.y;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        // 根据移动方向判断是“横切”还是“竖切”
+        const isHorizontalSwipe = absDx > absDy;
+
+        for (const g of grooves) {
+          if (g.cut) continue;
+
+          // 横向划，只允许切横向的缝；竖向划，只允许切竖向的缝
+          if (isHorizontalSwipe && g.orientation !== "h") continue;
+          if (!isHorizontalSwipe && g.orientation !== "v") continue;
+
+          const d = distancePointToLine(
+            pos.x,
+            pos.y,
+            g.orientation,
+            g.pos,
+            g.orientation === "v" ? tofuRect.y : tofuRect.x,
+            g.orientation === "v" ? tofuRect.y + tofuRect.h : tofuRect.x + tofuRect.w
+          );
+          if (d <= THRESHOLD) {
+            cutGroove(g, pos);
+          }
+        }
+
+        lastPos = pos;
+      }
+
+      function cutGroove(g, pos) {
+        g.cut = true;
+        g.cutTime = performance.now();
+        cutGrooveCount++;
+
+        const add = 15 + Math.floor(Math.random() * 11);
+        score += add;
+
+        // 按比例估算被“切开”的块数量（视觉上用）
+        cutBlockCount = Math.round((cutGrooveCount / grooves.length) * TOTAL_BLOCKS);
+        if (cutBlockCount > TOTAL_BLOCKS) cutBlockCount = TOTAL_BLOCKS;
+
+        updateUI();
+        showPopupScore(add, pos.x, pos.y);
+
+        if (cutGrooveCount === grooves.length) {
+          // 全部缝切完，进行本关评分
+          finishLevel();
+        }
+      }
+
+      function finishLevel() {
+        const now = performance.now();
+        const timeSec = (now - levelStartTime) / 1000;
+
+        // 评分：越快越高，操作越少越高
+        const base = 120;
+        const timePenalty = timeSec * 4; // 每秒扣 4 分
+        const extraAttempts = Math.max(0, attempts - grooves.length); // 超过“最少 1 次划过每条缝”的多余尝试
+        const accuracyPenalty = extraAttempts * 6; // 每多一次尝试扣 6 分
+
+        let levelScore = Math.round(base - timePenalty - accuracyPenalty);
+        if (levelScore > 100) levelScore = 100;
+        if (levelScore < 0) levelScore = 0;
+
+        const passed = levelScore >= 90;
+
+        if (passed) {
+          if (currentLevel < MAX_LEVEL) {
+            hintBar.textContent = `本关得分：${levelScore} 分，过关！准备进入第 ${currentLevel + 1} 关～`;
+            currentLevel++;
+            setTimeout(() => {
+              resetGameState();
+            }, 900);
+          } else {
+            hintBar.textContent = `本关得分：${levelScore} 分，全部 ${MAX_LEVEL} 关通关！开始拌霉豆腐～`;
+            setTimeout(() => {
+              startMixScene();
+            }, 900);
+          }
+        } else {
+          hintBar.textContent = `本关得分：${levelScore} 分，未过关，再试一次吧（90 分以上才可过关）`;
+        }
+      }
+
+      function showPopupScore(value, x, y) {
+        const rect = canvas.getBoundingClientRect();
+        const innerRect = canvas.parentElement.getBoundingClientRect();
+
+        const relX = (x / canvas.width) * rect.width + (rect.left - innerRect.left);
+        const relY = (y / canvas.height) * rect.height + (rect.top - innerRect.top);
+
+        popupScoreEl.textContent = "+" + value;
+        popupScoreEl.style.left = relX + "px";
+        popupScoreEl.style.top = relY + "px";
+        popupScoreEl.classList.add("show");
+        popupScoreEl.style.transform = "translate(-50%, -50%)";
+
+        requestAnimationFrame(() => {
+          popupScoreEl.style.transition = "transform 0.4s ease-out, opacity 0.4s ease-out";
+          popupScoreEl.style.opacity = "1";
+          popupScoreEl.style.transform = "translate(-50%, -90%)";
+        });
+
+        setTimeout(() => {
+          popupScoreEl.style.opacity = "0";
+        }, 350);
+      }
+
+      canvas.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        attempts++;
+        lastPos = getPointerPos(e);
+      });
+
+      canvas.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        const pos = getPointerPos(e);
+        handleMove(pos);
+      });
+
+      canvas.addEventListener("mouseup", () => {
+        isDragging = false;
+        lastPos = null;
+      });
+
+      canvas.addEventListener("mouseleave", () => {
+        isDragging = false;
+        lastPos = null;
+      });
+
+      canvas.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        isDragging = true;
+        attempts++;
+        lastPos = getPointerPos(e);
+      }, { passive: false });
+
+      canvas.addEventListener("touchmove", (e) => {
+        e.preventDefault();
+        if (!isDragging) return;
+        const pos = getPointerPos(e);
+        handleMove(pos);
+      }, { passive: false });
+
+      canvas.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        isDragging = false;
+        lastPos = null;
+      }, { passive: false });
+
+      btnReset.addEventListener("click", () => {
+        resetGameState();
+      });
+
+      btnBack.addEventListener("click", () => {
+        screenGame.classList.remove("active");
+        screenIntro.classList.add("active");
+      });
+
+      function buildMixBottleTofu() {
+        mixBottleTofu.innerHTML = "";
+        const pieces = 9;
+        for (let i = 0; i < pieces; i++) {
+          const d = document.createElement("div");
+          mixBottleTofu.appendChild(d);
+        }
+      }
+
+      function startMixScene() {
+        screenGame.classList.remove("active");
+        screenIntro.classList.remove("active");
+        screenMix.classList.add("active");
+        buildMixBottleTofu();
+        mixText.textContent = "把切好的霉豆腐装进瓶子，先点小料～";
+        mixBottle.classList.remove("bottle-shake");
+        // 重置小料状态
+        addedCondiments.chili = false;
+        addedCondiments.salt = false;
+        addedCondiments.liquor = false;
+        condimentButtons.forEach(btn => btn.classList.remove("added"));
+        btnShake.disabled = true;
+      }
+
+      condimentButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-condiment");
+          if (!addedCondiments[key]) {
+            addedCondiments[key] = true;
+            btn.classList.add("added");
+            if (key === "chili") mixText.textContent = "先撒一把辣椒面～";
+            if (key === "salt") mixText.textContent = "再来一点食盐提味～";
+            if (key === "liquor") mixText.textContent = "最后倒上高度白酒～";
+          }
+
+          const allAdded =
+            addedCondiments.chili &&
+            addedCondiments.salt &&
+            addedCondiments.liquor;
+          if (allAdded) {
+            mixText.textContent = "小料都加好了，可以确认摇瓶啦～";
+            btnShake.disabled = false;
+          }
+        });
+      });
+
+      btnShake.addEventListener("click", () => {
+        mixBottle.classList.add("bottle-shake");
+        mixText.textContent = "摇摇摇……让辣椒面、食盐和白酒都裹满霉豆腐！";
+        setTimeout(() => {
+          mixBottle.classList.remove("bottle-shake");
+          mixText.textContent = "美女，你的霉豆腐好了，要放 15 天才能吃哦！";
+        }, 2200);
+      });
+
+      initTofuGame = function() {
+        resetGameState();
+        lastTime = 0;
+        requestAnimationFrame(drawScene);
+      };
+    })();
+  </script>
+</body>
+</html>
+
